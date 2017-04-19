@@ -17,6 +17,7 @@ type Gist struct {
 	Public      bool
 	URL         string
 	Owner       *Owner
+	Files       map[string]*File
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"created_at"`
 }
@@ -24,6 +25,11 @@ type Gist struct {
 type Owner struct {
 	Login   string
 	HTMLURL string `json:"html_url"`
+}
+
+type File struct {
+	Filename string
+	Language string
 }
 
 func ListGists(username string) error {
@@ -44,7 +50,10 @@ func ListGists(username string) error {
 		return err
 	}
 	for _, gist := range gists {
-		fmt.Printf("#%s %s\n", gist.ID, gist.Description)
+		fmt.Printf("%s: %s\n", gist.ID, gist.Description)
+		for name, file := range gist.Files {
+			fmt.Printf("  %s %s\n", name, file.Language)
+		}
 	}
 	return nil
 }
