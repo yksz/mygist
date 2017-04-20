@@ -1,18 +1,28 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"log"
+	"os"
 
-	"./internal"
+	"github.com/yksz/mygist/internal"
 )
 
 func main() {
-	user := flag.String("user", "", "username")
-	flag.Parse()
+	if len(os.Args) <= 1 {
+		fmt.Printf("usage: %s <username>\n", os.Args[0])
+		os.Exit(1)
+	}
+	username := os.Args[1]
 
-	err := internal.ListGists(*user)
+	password, err := internal.ReadPassword()
 	if err != nil {
 		log.Fatal(err)
+		return
+	}
+
+	if err := internal.ListGists(username, password); err != nil {
+		log.Fatal(err)
+		return
 	}
 }

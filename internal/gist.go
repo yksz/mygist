@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -32,12 +33,16 @@ type File struct {
 	Language string
 }
 
-func ListGists(username string) error {
+func ListGists(username, password string) error {
 	if username == "" {
-		panic("username must not be empty")
+		return errors.New("username must not be empty")
 	}
 
-	resp, err := http.Get(apiURL + "/users/" + username + "/gists")
+	url := apiURL + "/users/" + username + "/gists"
+	req, err := http.NewRequest("GET", url, nil)
+	req.SetBasicAuth(username, password)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -45,6 +50,7 @@ func ListGists(username string) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("status: %s", resp.Status)
 	}
+
 	var gists []Gist
 	if err := json.NewDecoder(resp.Body).Decode(&gists); err != nil {
 		return err
