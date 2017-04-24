@@ -33,14 +33,17 @@ type File struct {
 	Language string
 }
 
-func ListGists(username, password string) error {
+func ListGists(token, username string) error {
+	if token == "" {
+		return errors.New("token must not be empty")
+	}
 	if username == "" {
 		return errors.New("username must not be empty")
 	}
 
 	url := apiURL + "/users/" + username + "/gists"
 	req, err := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth(username, password)
+	req.Header.Add("Authorization", "token "+token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
