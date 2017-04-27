@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/yksz/mygist/gist"
 	"github.com/yksz/mygist/internal"
 )
 
@@ -19,17 +19,18 @@ func main() {
 		return
 	}
 
-	gister := gist.NewGister(apiURL, auth.AccessToken)
-	gists, err := gister.ListGists(auth.Username)
+	client := internal.NewClientWithOAuth2(auth.AccessToken)
+	ctx := context.Background()
+	gists, _, err := client.Gists.List(ctx, auth.Username, nil)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
 	for _, gist := range gists {
-		fmt.Printf("%s: %s\n", gist.ID, gist.Description)
-		for name, file := range gist.Files {
-			fmt.Printf("  %s %s\n", name, file.Language)
+		fmt.Printf("%s:\n", *gist.ID)
+		for _, file := range gist.Files {
+			fmt.Printf("  %s\n", *file.Filename)
 		}
 	}
 }
