@@ -7,13 +7,15 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"time"
 
 	"github.com/yksz/mygist/github"
 	"github.com/yksz/mygist/internal"
 )
 
 const (
-	appHomeDirName = ".mygist"
+	appName        = "mygist"
+	appHomeDirName = "." + appName
 	configFileName = "config"
 )
 
@@ -76,7 +78,8 @@ func (c *Config) Create() error {
 	if err != nil {
 		return err
 	}
-	token, err := github.CreateAccessToken(username, password)
+	note := appName + "_" + time.Now().Format("20060102")
+	token, err := github.CreateAccessToken(username, password, note)
 	if err != nil {
 		return err
 	}

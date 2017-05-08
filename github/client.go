@@ -12,3 +12,11 @@ func NewClient(token string) *github.Client {
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	return github.NewClient(tc)
 }
+
+func newClient(username, password string) *github.Client {
+	tp := github.BasicAuthTransport{
+		Username: username,
+		Password: password,
+	}
+	return github.NewClient(tp.Client())
+}
