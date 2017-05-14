@@ -3,20 +3,18 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"time"
 
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/yksz/mygist/github"
 	"github.com/yksz/mygist/internal"
 )
 
 const (
-	appName        = "mygist"
-	appHomeDirName = "." + appName
-	configFileName = "config"
+	AppName       = "mygist"
+	workspaceName = "." + AppName
 )
 
 type Config struct {
@@ -26,47 +24,16 @@ type Config struct {
 
 var Conf Config
 
-func init() {
-	if err := initConf(); err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-}
-
-func initConf() error {
-	appHomeDir, err := GetAppHomeDir()
+func GetWorkspace() (string, error) {
+	home, err := homedir.Dir()
 	if err != nil {
-		return err
+		return home, err
 	}
-	configFile := filepath.Join(appHomeDir, configFileName)
-	if internal.Exists(configFile) {
-		return Conf.Load(configFile)
-	} else {
-		if err := Conf.Create(); err != nil {
-			return err
-		}
-		return Conf.Save(configFile)
-	}
-}
-
-func GetAppHomeDir() (string, error) {
-	userHomeDir, err := getUserHomeDir()
-	if err != nil {
+	workspace := filepath.Join(home, workspaceName)
+	if err := os.MkdirAll(workspace, 0700); err != nil {
 		return "", err
 	}
-	appHomeDir := filepath.Join(userHomeDir, appHomeDirName)
-	if err := os.MkdirAll(appHomeDir, 0700); err != nil {
-		return "", err
-	}
-	return appHomeDir, nil
-}
-
-func getUserHomeDir() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	return usr.HomeDir, nil
+	return workspace, nil
 }
 
 func (c *Config) Create() error {
@@ -78,7 +45,7 @@ func (c *Config) Create() error {
 	if err != nil {
 		return err
 	}
-	note := appName + "_" + time.Now().Format("20060102")
+	note := AppName + "_" + time.Now().Format("20060102")
 	token, err := github.CreateAccessToken(username, password, note)
 	if err != nil {
 		return err
@@ -90,7 +57,7 @@ func (c *Config) Create() error {
 
 func (c *Config) Load(filename string) error {
 	if !internal.Exists(filename) {
-		return fmt.Errorf("file not found: %s", filename)
+		return fmt.Errorf("config file not found: %s", filename)
 	}
 	return c.load(filename)
 }
