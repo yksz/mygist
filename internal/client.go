@@ -1,4 +1,4 @@
-package github
+package internal
 
 import (
 	"github.com/google/go-github/github"

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/yksz/mygist/github"
 	"github.com/yksz/mygist/internal"
 )
 
@@ -46,7 +45,7 @@ func (c *Config) Create() error {
 		return err
 	}
 	note := AppName + "_" + time.Now().Format("20060102")
-	token, err := github.CreateAccessToken(username, password, note)
+	token, err := internal.CreateAccessToken(username, password, note)
 	if err != nil {
 		return err
 	}
