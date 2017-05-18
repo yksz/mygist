@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
 	"github.com/google/go-github/github"
 	"github.com/spf13/cobra"
@@ -18,14 +20,14 @@ var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync gists",
 	Long:  "Sync gists",
-	RunE:  sync,
+	RunE:  execSync,
 }
 
 func init() {
 	RootCmd.AddCommand(syncCmd)
 }
 
-func sync(cmd *cobra.Command, args []string) error {
+func execSync(cmd *cobra.Command, args []string) error {
 	syncDir, err := getSyncDir()
 	if err != nil {
 		return err
@@ -38,9 +40,8 @@ func sync(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for _, gist := range gists {
-		<-cloneGist(gist, syncDir)
-	}
+	count := cloneGists(gists, syncDir)
+	fmt.Printf("sync %d gists\n", count)
 	return nil
 }
 
@@ -56,18 +57,28 @@ func getSyncDir() (string, error) {
 	return syncDir, nil
 }
 
-func cloneGist(gist *github.Gist, dir string) <-chan error {
-	ch := make(chan error)
+func cloneGists(gists []*github.Gist, dir string) int {
+	count := 0
+	var wg sync.WaitGroup
+	for _, g := range gists {
+		wg.Add(1)
+		go func(gist *github.Gist) {
+			defer wg.Done()
+			if err := cloneGist(gist, dir); err == nil {
+				count++
+			}
+		}(g)
+	}
+	wg.Wait()
+	return count
+}
 
+func cloneGist(gist *github.Gist, dir string) error {
 	if gist.GitPullURL == nil {
-		ch <- nil
-		return ch
+		return nil
 	}
 
-	go func() {
-		cmd := exec.Command("git", "clone", *gist.GitPullURL)
-		cmd.Dir = dir
-		ch <- cmd.Run()
-	}()
-	return ch
+	cmd := exec.Command("git", "clone", *gist.GitPullURL)
+	cmd.Dir = dir
+	return cmd.Run()
 }
