@@ -20,14 +20,14 @@ var syncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "Sync gists",
 	Long:  "Sync gists",
-	RunE:  execSync,
+	RunE:  doSync,
 }
 
 func init() {
 	RootCmd.AddCommand(syncCmd)
 }
 
-func execSync(cmd *cobra.Command, args []string) error {
+func doSync(cmd *cobra.Command, args []string) error {
 	syncDir, err := getSyncDir()
 	if err != nil {
 		return err
